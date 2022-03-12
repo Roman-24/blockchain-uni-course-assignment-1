@@ -1,14 +1,17 @@
 package faza1;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 // Meno študenta: Roman Bitarovský
 
 /*
 UTXO -> Unspent transaction output
+tx -> transaction
  */
 
 public class HandleTxs {
+
 
     /**
      * Vytvorí verejný ledger, ktorého aktuálny UTXOPool (zbierka nevyčerpaných
@@ -21,6 +24,7 @@ public class HandleTxs {
         ledger = new UTXOPool(utxoPool);
     }
 
+
     /**
      * @return aktuálny UTXO pool. 
      * Ak nenájde žiadny aktuálny UTXO pool, tak vráti prázdny (nie nulový) objekt {@code UTXOPool}.
@@ -30,6 +34,7 @@ public class HandleTxs {
         // return false;
         return this.ledger;
     }
+
 
     /**
      * @return true, ak 
@@ -64,8 +69,7 @@ public class HandleTxs {
             }
 
             // Predchadzajuci output je pre nas vstupom
-            double outputValPrev = ledger.getTxOutput(unspentTransaction).value;
-            inputSum += outputValPrev;
+            inputSum += ledger.getTxOutput(unspentTransaction).value;
 
             // (2) Kontrola podpisov na vstupe
             // zober danú unspentTransaction pober jej adresu a skontroluj podpisy v rsa.jar
@@ -73,7 +77,7 @@ public class HandleTxs {
                 return false;
             }
 
-            // (3) ak by v nasom UTXO tato transakcia uz bola tak sa jedna o doublespend a teda vraciame fasle
+            // (3) ak by v tx UTXO tato transakcia uz bola tak sa jedna o doublespend a teda vraciame fasle
             if(seenUTXO_set.contains(unspentTransaction)) {
                 return false;
             }
@@ -83,7 +87,23 @@ public class HandleTxs {
 
         }
 
-        return false;
+        // (4) pozri vsetky tx outputs a skontroluj ich
+        for(Transaction.Output output : tx.getOutputs()) {
+
+            // (4) kontrola ci nieje zaporny output
+            if(output.value < 0.0) {
+                return false;
+            }
+            outputSum += output.value;
+        }
+
+        // (5) ak by odislo viac ako prislo tak return false
+        if(outputSum > inputSum) {
+            return false;
+        }
+
+        // ak boli vsetky kontorly uspesne transakcia je validna a return true
+        return true;
     }
 
     /**
@@ -93,6 +113,45 @@ public class HandleTxs {
      */
     public Transaction[] handler(Transaction[] possibleTxs) {
         // IMPLEMENTOVAŤ
-        return false;
+        //return false;
+
+        List<Transaction> acceptedTx = new ArrayList<>();
+
+        for (Transaction tx : possibleTxs) {
+
+            // pre kazdu transakciu zavola hore implementovanú funckiu txIsValid
+            if (txIsValid(tx)) {
+
+                // ak bola validna tak sa prida do zoznamu
+                acceptedTx.add(tx);
+
+                // a aktualizuje aktuálny UTXO pool podľa potreby.
+
+                // pre danu tx zmaze UTXOs z aktualneho poolu
+                for (Transaction.Input input : tx.getInputs()) {
+
+                    UTXO UTXOForRemove = new UTXO(input.prevTxHash, input.outputIndex);
+                    this.ledger.removeUTXO(UTXOForRemove);
+                }
+
+                // z outputov tx urobi nove UTXOs a pridaju sa do UTXO poolu
+                int output_index = 0;
+                for (Transaction.Output output : tx.getOutputs()) {
+
+                    UTXO UTXOForAdd = new UTXO(tx.getHash(), output_index);
+                    output_index++;
+
+                    this.ledger.addUTXO(UTXOForAdd, output);
+                }
+            }
+        }
+
+        // vytvorenie pola validnych tx
+        int size = acceptedTx.size();
+        Transaction[] validTxArr = new Transaction[size];
+        validTxArr = acceptedTx.toArray(validTxArr);
+
+        // vracia pole vzájomne platných prijatých transakcií
+        return validTxArr;
     }
 }
