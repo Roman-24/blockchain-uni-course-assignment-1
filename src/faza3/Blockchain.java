@@ -1,3 +1,4 @@
+package faza3;
 // Meno študenta:
 // Blockchain by mal na uspokojenie funkcií udržiavať iba obmedzené množstvo uzlov
 // Nemali by ste mať všetky bloky pridané do blockchainu v pamäti  
@@ -26,7 +27,7 @@ public class Blockchain {
                 height = parent.height + 1;
                 parent.children.add(this);
             } else {
-                eight = 1;
+                height = 1;
             }
         }
         public UTXOPool getUTXOPoolCopy() {

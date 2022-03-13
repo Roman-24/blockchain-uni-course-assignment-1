@@ -1,5 +1,3 @@
-package faza2;
-
 // Príklad simulácie. Tento test spúšťa uzly na náhodnom grafe.
 // Na konci vypíše ID transakcií, na ktorých bol podľa uzlov
 // dosiahnutý konsenzus. Túto simuláciu môžete použiť na

@@ -1,5 +1,3 @@
-package faza2;
-
 /**
  * Tento Byzantský uzol by sa dal považovať za vypnutý.
  * Nikdy nevysiela žiadne transakcie ani neodpovedá
