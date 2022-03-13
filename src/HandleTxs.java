@@ -1,4 +1,3 @@
-package faza1;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -73,7 +72,7 @@ public class HandleTxs {
 
             // (2) Kontrola podpisov na vstupe
             // zober danú unspentTransaction pober jej adresu a skontroluj podpisy v rsa.jar
-            if(!ledger.getTxOutput(unspentTransaction).address.verifySignature(tx.getRawDataToSign(i), txInput.signature)) {
+            if(!ledger.getTxOutput(unspentTransaction).address.verifySignature(tx.getDataToSign(i), txInput.signature)) {
                 return false;
             }
 

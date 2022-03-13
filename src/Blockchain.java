@@ -1,5 +1,4 @@
-package faza3;
-// Meno študenta:
+// Meno študenta: Roman Bitarovský
 // Blockchain by mal na uspokojenie funkcií udržiavať iba obmedzené množstvo uzlov
 // Nemali by ste mať všetky bloky pridané do blockchainu v pamäti  
 // pretože by to spôsobilo pretečenie pamäte.

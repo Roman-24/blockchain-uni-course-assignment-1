@@ -1,4 +1,3 @@
-package faza3;
 /*
 * Main pre zadanie 1 na predmete DMBLOCK - faza 3
 */

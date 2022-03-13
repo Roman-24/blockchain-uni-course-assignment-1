@@ -1,9 +1,8 @@
-package faza1;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Transaction {
 
@@ -29,6 +28,41 @@ public class Transaction {
             else
                 signature = Arrays.copyOf(sig, sig.length);
         }
+
+        public boolean equals(Object other) {
+            if (other == null) {
+                return false;
+            }
+            if (getClass() != other.getClass()) {
+                return false;
+            }
+
+            Input in = (Input) other;
+
+            if (prevTxHash.length != in.prevTxHash.length)
+                return false;
+            for (int i = 0; i < prevTxHash.length; i++) {
+                if (prevTxHash[i] != in.prevTxHash[i])
+                    return false;
+            }
+            if (outputIndex != in.outputIndex)
+                return false;
+            if (signature.length != in.signature.length)
+                return false;
+            for (int i = 0; i < signature.length; i++) {
+                if (signature[i] != in.signature[i])
+                    return false;
+            }
+            return true;
+        }
+
+        public int hashCode() {
+            int hash = 1;
+            hash = hash * 17 + Arrays.hashCode(prevTxHash);
+            hash = hash * 31 + outputIndex;
+            hash = hash * 31 + Arrays.hashCode(signature);
+            return hash;
+        }
     }
 
     public class Output {
@@ -41,22 +75,65 @@ public class Transaction {
             value = v;
             address = addr;
         }
+
+        public boolean equals(Object other) {
+            if (other == null) {
+                return false;
+            }
+            if (getClass() != other.getClass()) {
+                return false;
+            }
+
+            Output op = (Output) other;
+
+            if (value != op.value)
+                return false;
+            if (!address.getExponent().equals(op.address.getExponent()))
+                return false;
+             if (!address.getModulus().equals(op.address.getModulus()))
+                return false;
+             return true;
+        }
+
+        public int hashCode() {
+            int hash = 1;
+            hash = hash * 17 + (int) value * 10000;
+            hash = hash * 31 + address.getExponent().hashCode();
+            hash = hash * 31 + address.getModulus().hashCode();
+            return hash;
+        }
     }
 
     /** hash transakcie, jej unikátne id */
     private byte[] hash;
     private ArrayList<Input> inputs;
     private ArrayList<Output> outputs;
+    private boolean coinbase;
 
     public Transaction() {
         inputs = new ArrayList<Input>();
         outputs = new ArrayList<Output>();
+        coinbase = false;
     }
 
     public Transaction(Transaction tx) {
         hash = tx.hash.clone();
         inputs = new ArrayList<Input>(tx.inputs);
         outputs = new ArrayList<Output>(tx.outputs);
+        coinbase = false;
+    }
+
+    /** vytvorenie coinbase transakcie s hodnotou {@code coin} a volanie finalize */
+    public Transaction(double coin, RSAKey address) {
+        coinbase = true;
+        inputs = new ArrayList<Input>();
+        outputs = new ArrayList<Output>();
+        addOutput(coin, address);
+        finalize();
+    }
+
+    public boolean isCoinbase() {
+        return coinbase;
     }
 
     public void addInput(byte[] prevTxHash, int outputIndex) {
@@ -124,7 +201,7 @@ public class Transaction {
     }
 
     public byte[] getTx() {
-        ArrayList<Byte> Tx = new ArrayList<Byte>();
+        ArrayList<Byte> rawTx = new ArrayList<Byte>();
         for (Input in : inputs) {
             byte[] prevTxHash = in.prevTxHash;
             ByteBuffer b = ByteBuffer.allocate(Integer.SIZE / 8);
@@ -133,12 +210,12 @@ public class Transaction {
             byte[] signature = in.signature;
             if (prevTxHash != null)
                 for (int i = 0; i < prevTxHash.length; i++)
-                    Tx.add(prevTxHash[i]);
+                    rawTx.add(prevTxHash[i]);
             for (int i = 0; i < outputIndex.length; i++)
-                Tx.add(outputIndex[i]);
+                rawTx.add(outputIndex[i]);
             if (signature != null)
                 for (int i = 0; i < signature.length; i++)
-                    Tx.add(signature[i]);
+                    rawTx.add(signature[i]);
         }
         for (Output op : outputs) {
             ByteBuffer b = ByteBuffer.allocate(Double.SIZE / 8);
@@ -147,16 +224,15 @@ public class Transaction {
             byte[] addressExponent = op.address.getExponent().toByteArray();
             byte[] addressModulus = op.address.getModulus().toByteArray();
             for (int i = 0; i < value.length; i++)
-                Tx.add(value[i]);
+                rawTx.add(value[i]);
             for (int i = 0; i < addressExponent.length; i++)
-                Tx.add(addressExponent[i]);
+                rawTx.add(addressExponent[i]);
             for (int i = 0; i < addressModulus.length; i++)
-                Tx.add(addressModulus[i]);
-
+                rawTx.add(addressModulus[i]);
         }
-        byte[] tx = new byte[Tx.size()];
+        byte[] tx = new byte[rawTx.size()];
         int i = 0;
-        for (Byte b : Tx)
+        for (Byte b : rawTx)
             tx[i++] = b;
         return tx;
     }
@@ -207,5 +283,44 @@ public class Transaction {
 
     public int numOutputs() {
         return outputs.size();
+    }
+
+    public boolean equals(Object other) {
+        if (other == null) {
+            return false;
+        }
+        if (getClass() != other.getClass()) {
+            return false;
+        }
+
+        Transaction tx = (Transaction) other;
+        // vstupy a výstupy by mali byť rovnaké
+        if (tx.numInputs() != numInputs())
+            return false;
+
+        for (int i = 0; i < numInputs(); i++) {
+            if (!getInput(i).equals(tx.getInput(i)))
+                return false;
+        }
+
+        if (tx.numOutputs() != numOutputs())
+            return false;
+
+        for (int i = 0; i < numOutputs(); i++) {
+            if (!getOutput(i).equals(tx.getOutput(i)))
+                return false;
+        }
+        return true;
+    }
+
+    public int hashCode() {
+        int hash = 1;
+        for (int i = 0; i < numInputs(); i++) {
+            hash = hash * 31 + getInput(i).hashCode();
+        }
+        for (int i = 0; i < numOutputs(); i++) {
+            hash = hash * 31 + getOutput(i).hashCode();
+        }
+        return hash;
     }
 }

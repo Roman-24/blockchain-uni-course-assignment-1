@@ -1,4 +1,3 @@
-package faza3;
 import java.util.Arrays;
 
 /** wrapper pre bajtové pole s implementovanou funkciou hashCode a equals */

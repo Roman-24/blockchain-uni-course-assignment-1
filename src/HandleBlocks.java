@@ -1,4 +1,3 @@
-package faza3;
 public class HandleBlocks {
     private Blockchain blockChain;
 
