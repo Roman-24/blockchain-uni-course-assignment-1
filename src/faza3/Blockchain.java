@@ -110,11 +110,8 @@ public class Blockchain {
 
         // skontroluj txs predchadzajuceho bloku
         Transaction[] validTxs = handlerTxs.handler(txs);
-        if (validTxs.length != txs.length) {
-            return false;
-        }
 
-        if (parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE){
+        if (validTxs.length != txs.length || parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE){
             return false;
         }
 
