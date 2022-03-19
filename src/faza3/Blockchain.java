@@ -150,7 +150,7 @@ public class Blockchain {
     // funkcia na pridanie coinbase tx
     private void addCoinbaseTx(Block block, UTXOPool utxoPool){
         Transaction coinbase = block.getCoinbase();
-        UTXO utxoCoinbase = new UTXO(coinbase.getHash(), 0);
+        UTXO utxoCoinbase = new UTXO(coinbase.getHash(),0);
         utxoPool.addUTXO(utxoCoinbase, coinbase.getOutput(0));
     }
 }
