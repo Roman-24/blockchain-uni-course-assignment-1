@@ -70,7 +70,7 @@ public class TrustedNode implements Node {
         for (int i = 0; i < followees.length; i++) {
 
             // ak node vysiela ale nieje v senders
-            if (followees[i] && !senders.contains(i))
+            if (followees[i] && senders.contains(i) !=  true)
                 notTrustedNodes[i] = true;
         }
         for (Candidate candidate : setOfCandidates) {
