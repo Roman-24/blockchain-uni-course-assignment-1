@@ -31,7 +31,7 @@ public class Blockchain {
         }
         public UTXOPool getUTXOPoolCopy() {
             return new UTXOPool(uPool);
-         }
+        }
     }
 
     // premenne pre moj vlatny blockchain
@@ -95,12 +95,14 @@ public class Blockchain {
         // zober predosli blok ak nieje null
         byte[] previousBlock = block.getPrevBlockHash();
         if (previousBlock == null){
+            System.out.println("False: previousBlock == null");
             return false;
         }
 
         // zober parenta ak nieje null
         BlockNode parentBlockNode = blockChain.get(new ByteArrayWrapper(previousBlock));
         if (parentBlockNode == null) {
+            System.out.println("False: parentBlockNode == null");
             return false;
         }
 
@@ -110,8 +112,13 @@ public class Blockchain {
 
         // skontroluj txs predchadzajuceho bloku
         Transaction[] validTxs = handlerTxs.handler(txs);
+        if (validTxs.length != txs.length){
+            System.out.println("False: validTxs.length != txs.length");
+            return false;
+        }
 
-        if (validTxs.length != txs.length || parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE){
+        if (parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE){
+            System.out.println("False: parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE");
             return false;
         }
 

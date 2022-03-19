@@ -1,23 +1,24 @@
-package faza2;
+
 
 // Meno študenta: Roman Bitarovský
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toSet;
 
 /* TrustedNode označuje uzol, ktorý dodržuje pravidlá (nie je byzantský) */
 public class TrustedNode implements Node {
 
-    // TrustedNode func
+    // TrustedNode func vars
     public double p_graph;
     public double p_byzantine;
     public double p_tXDistribution;
     public int numRounds;
-    // followeesSet func func
+    // followeesSet func func vars
     public boolean[] followees;
-    // pendingTransactionSet func
+    // pendingTransactionSet func vars
     public Set<Transaction> pendingTransactions;
 
     // add by me
@@ -52,20 +53,31 @@ public class TrustedNode implements Node {
     public void followeesReceive(ArrayList<Integer[]> candidates) {
         // IMPLEMENTOVAŤ
 
-        //convert arraylist to set
+        // konvert arraylist na set
+        // set bude storovat objekty typu triedy Candidate -> Candidate(Transaction tx, int sender)
         Set<Candidate> setOfCandidates = new HashSet<Candidate>();
         candidates.forEach((c) -> {
             Candidate tempCandidate = new Candidate(new Transaction(c[0]), c[1]);
             setOfCandidates.add(tempCandidate);
         });
 
-        Set<Integer> senders = setOfCandidates.stream().map(candidate -> candidate.sender).collect(toSet());
+        // stream aby sme mohli uplatnit funkciu map
+        Stream<Candidate> sendersSteam = setOfCandidates.stream();
+        // namapuj unikatkych senderov
+        Stream<Object> sendersMap = sendersSteam.map(candidate -> candidate.sender);
+        Set<Object> senders = sendersMap.collect(toSet());
+
         for (int i = 0; i < followees.length; i++) {
+
+            // ak node vysiela ale nieje v senders
             if (followees[i] && !senders.contains(i))
                 notTrustedNodes[i] = true;
         }
         for (Candidate candidate : setOfCandidates) {
-            if (!notTrustedNodes[candidate.sender]) {
+
+            // ak sender nieje v nedôverihodnych nodes tak jeho tx bude uznana
+            // teda pridasa do cakajucich tx
+            if (notTrustedNodes[candidate.sender] != true) {
                 pendingTransactions.add(candidate.tx);
             }
         }
