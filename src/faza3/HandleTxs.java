@@ -17,15 +17,15 @@ public class HandleTxs {
      * transakčných výstupov) je {@code utxoPool}. Malo by to vytvoriť obchrannú kópiu
      * utxoPool pomocou konštruktora UTXOPool (UTXOPool uPool).
      */
-    public UTXOPool ledger;
+    private UTXOPool ledger;
     public HandleTxs(UTXOPool utxoPool) {
         // IMPLEMENTOVAŤ
-        ledger = new UTXOPool(utxoPool);
+        this.ledger = new UTXOPool(utxoPool);
     }
 
 
     /**
-     * @return aktuálny UTXO pool.
+     * @return aktuálny UTXO pool. 
      * Ak nenájde žiadny aktuálny UTXO pool, tak vráti prázdny (nie nulový) objekt {@code UTXOPool}.
      */
     public UTXOPool UTXOPoolGet() {
@@ -36,11 +36,11 @@ public class HandleTxs {
 
 
     /**
-     * @return true, ak
-     * (1) sú všetky výstupy nárokované {@code tx} v aktuálnom UTXO pool,
-     * (2) podpisy na každom vstupe {@code tx} sú platné,
-     * (3) žiadne UTXO nie je nárokované viackrát,
-     * (4) všetky výstupné hodnoty {@code tx}s sú nezáporné a
+     * @return true, ak 
+     * (1) sú všetky výstupy nárokované {@code tx} v aktuálnom UTXO pool, 
+     * (2) podpisy na každom vstupe {@code tx} sú platné, 
+     * (3) žiadne UTXO nie je nárokované viackrát, 
+     * (4) všetky výstupné hodnoty {@code tx}s sú nezáporné a 
      * (5) súčet vstupných hodnôt {@code tx}s je väčší alebo rovný súčtu jej
      *     výstupných hodnôt; a false inak.
      */
@@ -68,11 +68,11 @@ public class HandleTxs {
             }
 
             // Predchadzajuci output je pre nas vstupom
-            inputSum += ledger.getTxOutput(unspentTransaction).value;
+            inputSum += this.ledger.getTxOutput(unspentTransaction).value;
 
             // (2) Kontrola podpisov na vstupe
             // zober danú unspentTransaction pober jej adresu a skontroluj podpisy v rsa.jar
-            if(!ledger.getTxOutput(unspentTransaction).address.verifySignature(tx.getDataToSign(i), txInput.signature)) {
+            if(!this.ledger.getTxOutput(unspentTransaction).address.verifySignature(tx.getDataToSign(i), txInput.signature)) {
                 return false;
             }
 
@@ -107,7 +107,7 @@ public class HandleTxs {
 
     /**
      * Spracováva každú epochu prijímaním neusporiadaného radu navrhovaných
-     * transakcií, kontroluje správnosť každej transakcie, vracia pole vzájomne
+     * transakcií, kontroluje správnosť každej transakcie, vracia pole vzájomne 
      * platných prijatých transakcií a aktualizuje aktuálny UTXO pool podľa potreby.
      */
     public Transaction[] handler(Transaction[] possibleTxs) {
@@ -119,7 +119,7 @@ public class HandleTxs {
         for (Transaction tx : possibleTxs) {
 
             // pre kazdu transakciu zavola hore implementovanú funckiu txIsValid
-            if (txIsValid(tx) == true) {
+            if (txIsValid(tx)) {
 
                 // ak bola validna tak sa prida do zoznamu
                 acceptedTx.add(tx);

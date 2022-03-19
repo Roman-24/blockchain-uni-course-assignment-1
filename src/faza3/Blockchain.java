@@ -31,32 +31,29 @@ public class Blockchain {
         }
         public UTXOPool getUTXOPoolCopy() {
             return new UTXOPool(uPool);
-        }
+         }
     }
-
-    // premenne pre moj vlatny blockchain
-    private TransactionPool txPool;
-    private HashMap<ByteArrayWrapper, BlockNode> blockChain;
-    private BlockNode highestNode;
-
     /**
      * vytvor prázdny blockchain iba s Genesis blokom. Predpokladajme, že
      * {@code genesisBlock} je platný blok
      */
+    // premenne pre moj vlatny blockchain
+    private TransactionPool txPool;
+    private HashMap<ByteArrayWrapper, BlockNode> blockChain;
+    private BlockNode highestNode;
     public Blockchain(Block genesisBlock) {
         // IMPLEMENTOVAŤ
         blockChain = new HashMap<>();
-        this.txPool = new TransactionPool();
+        txPool = new TransactionPool();
 
         UTXOPool UTXOPool = new UTXOPool();
         addCoinbaseTx(genesisBlock, UTXOPool);
 
         BlockNode genesisNode = new BlockNode(genesisBlock, null, UTXOPool);
-        highestNode = genesisNode;
 
         blockChain.put(new ByteArrayWrapper((genesisBlock.getHash())), genesisNode);
 
-
+        highestNode = genesisNode;
     }
 
     /** Získaj maximum height blok */
@@ -93,14 +90,14 @@ public class Blockchain {
         // IMPLEMENTOVAŤ
 
         // zober predosli blok ak nieje null
-        byte[] previousBlock = block.getPrevBlockHash();
-        if (previousBlock == null){
+        byte[] previousBlockHash = block.getPrevBlockHash();
+        if (previousBlockHash == null){
             System.out.println("False: previousBlock == null");
             return false;
         }
 
         // zober parenta ak nieje null
-        BlockNode parentBlockNode = blockChain.get(new ByteArrayWrapper(previousBlock));
+        BlockNode parentBlockNode = blockChain.get(new ByteArrayWrapper(previousBlockHash));
         if (parentBlockNode == null) {
             System.out.println("False: parentBlockNode == null");
             return false;
@@ -117,15 +114,15 @@ public class Blockchain {
             return false;
         }
 
+        UTXOPool utxoPool = handlerTxs.UTXOPoolGet();
+        // coinbase tx teda vymajnovany BTC treba do bloku pridat ako prvu transakciu
+        addCoinbaseTx(block, utxoPool);
+
         if (parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE){
             System.out.println("False: parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE");
             return false;
         }
 
-        UTXOPool utxoPool = handlerTxs.UTXOPoolGet();
-
-        // coinbase tx teda vymajnovany BTC treba do bloku pridat ako prvu transakciu
-        addCoinbaseTx(block, utxoPool);
 
         BlockNode node = new BlockNode(block, parentBlockNode, utxoPool);
 
@@ -133,6 +130,12 @@ public class Blockchain {
 
         if (parentBlockNode.height + 1 > highestNode.height){
             highestNode = node;
+        }
+
+
+        ArrayList<Transaction> allTxs = block.getTransactions();
+        for (Transaction tx : allTxs) {
+            txPool.removeTransaction(tx.getHash());
         }
 
         return true;

@@ -17,10 +17,10 @@ public class HandleTxs {
      * transakčných výstupov) je {@code utxoPool}. Malo by to vytvoriť obchrannú kópiu
      * utxoPool pomocou konštruktora UTXOPool (UTXOPool uPool).
      */
-    public UTXOPool ledger;
+    private UTXOPool ledger;
     public HandleTxs(UTXOPool utxoPool) {
         // IMPLEMENTOVAŤ
-        ledger = new UTXOPool(utxoPool);
+        this.ledger = new UTXOPool(utxoPool);
     }
 
 
@@ -68,11 +68,11 @@ public class HandleTxs {
             }
 
             // Predchadzajuci output je pre nas vstupom
-            inputSum += ledger.getTxOutput(unspentTransaction).value;
+            inputSum += this.ledger.getTxOutput(unspentTransaction).value;
 
             // (2) Kontrola podpisov na vstupe
             // zober danú unspentTransaction pober jej adresu a skontroluj podpisy v rsa.jar
-            if(!ledger.getTxOutput(unspentTransaction).address.verifySignature(tx.getDataToSign(i), txInput.signature)) {
+            if(!this.ledger.getTxOutput(unspentTransaction).address.verifySignature(tx.getDataToSign(i), txInput.signature)) {
                 return false;
             }
 
