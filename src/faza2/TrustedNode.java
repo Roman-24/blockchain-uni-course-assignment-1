@@ -73,13 +73,13 @@ public class TrustedNode implements Node {
             if (followees[i] && senders.contains(i) !=  true)
                 notTrustedNodes[i] = true;
         }
-        for (Candidate candidate : setOfCandidates) {
 
+        setOfCandidates.forEach((candidate) -> {
             // ak sender nieje v nedôverihodnych nodes tak jeho tx bude uznana
             // teda pridasa do cakajucich tx
             if (notTrustedNodes[candidate.sender] != true) {
                 pendingTransactions.add(candidate.tx);
             }
-        }
+        });
     }
 }
