@@ -48,3 +48,4 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
+out/production/DMBLOCK-zadanie-1/Faza3_unitTests.rtf

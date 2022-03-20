@@ -62,13 +62,14 @@ public class HandleTxs {
             // Pridaj predchadzajucu hodnotu do UTXO pool
             UTXO unspentTransaction = new UTXO(txInput.prevTxHash, txInput.outputIndex);
 
-            // (1) Ak je output bez tx tak vraciame false
-            if(this.ledger.contains(unspentTransaction) == false) {
+            // (1) Aktuálne UTXO musi obsahovat predchadzajuci output
+            if(this.ledger.contains(unspentTransaction) == true) {
+                // Predchadzajuci output je pre nas vstupom
+                inputSum += this.ledger.getTxOutput(unspentTransaction).value;
+            } else {
+                // Ak je output bez tx tak vraciame false
                 return false;
             }
-
-            // Predchadzajuci output je pre nas vstupom
-            inputSum += this.ledger.getTxOutput(unspentTransaction).value;
 
             // (2) Kontrola podpisov na vstupe
             // zober danú unspentTransaction pober jej adresu a skontroluj podpisy v rsa.jar
@@ -77,13 +78,13 @@ public class HandleTxs {
             }
 
             // (3) ak by v tx UTXO tato transakcia uz bola tak sa jedna o doublespend a teda vraciame fasle
-            if(seenUTXO_set.contains(unspentTransaction)) {
+            if(seenUTXO_set.contains(unspentTransaction) == false) {
+                // pridaj transakciu do mojho poolu lebo zatial je validna a este v poole nieje
+                seenUTXO_set.add(unspentTransaction);
+            } else {
+                // false lebo doublespend
                 return false;
             }
-
-            // pridaj transakciu do mojho poolu lebo zatial je validna
-            seenUTXO_set.add(unspentTransaction);
-
         }
 
         // (4) pozri vsetky tx outputs a skontroluj ich
@@ -119,7 +120,7 @@ public class HandleTxs {
         for (Transaction tx : possibleTxs) {
 
             // pre kazdu transakciu zavola hore implementovanú funckiu txIsValid
-            if (txIsValid(tx)) {
+            if (txIsValid(tx) == true) {
 
                 // ak bola validna tak sa prida do zoznamu
                 acceptedTx.add(tx);

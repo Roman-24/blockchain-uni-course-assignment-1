@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Blockchain {
+
     public static final int CUT_OFF_AGE = 12;
 
     // všetky potrebné informácie na spracovanie bloku v reťazi blokov
@@ -33,45 +34,46 @@ public class Blockchain {
             return new UTXOPool(uPool);
          }
     }
+
     /**
      * vytvor prázdny blockchain iba s Genesis blokom. Predpokladajme, že
      * {@code genesisBlock} je platný blok
      */
     // premenne pre moj vlatny blockchain
-    private TransactionPool txPool;
+    private TransactionPool txPool; // pool tx odkial sa budu brat transakcie na zostavenie blocku
     private HashMap<ByteArrayWrapper, BlockNode> blockChain;
-    private BlockNode highestNode;
+    private BlockNode highestNode; // posledny node
     public Blockchain(Block genesisBlock) {
         // IMPLEMENTOVAŤ
-        blockChain = new HashMap<>();
-        txPool = new TransactionPool();
+        this.blockChain = new HashMap<>();
+        this.txPool = new TransactionPool();
 
         UTXOPool UTXOPool = new UTXOPool();
         addCoinbaseTx(genesisBlock, UTXOPool);
 
         BlockNode genesisNode = new BlockNode(genesisBlock, null, UTXOPool);
 
-        blockChain.put(new ByteArrayWrapper((genesisBlock.getHash())), genesisNode);
+        this.blockChain.put(new ByteArrayWrapper((genesisBlock.getHash())), genesisNode);
 
-        highestNode = genesisNode;
+        this.highestNode = genesisNode;
     }
 
     /** Získaj maximum height blok */
     public Block getBlockAtMaxHeight() {
         // IMPLEMENTOVAŤ
-        return highestNode.b;
+        return this.highestNode.b;
     }
 
     /** Získaj UTXOPool na ťaženie nového bloku na vrchu max height blok */
     public UTXOPool getUTXOPoolAtMaxHeight() {
         // IMPLEMENTOVAŤ
-        return highestNode.getUTXOPoolCopy();
+        return this.highestNode.getUTXOPoolCopy();
     }
 
     /** Získaj pool transakcií na vyťaženie nového bloku */
     public TransactionPool getTransactionPool() {
         // IMPLEMENTOVAŤ
-        return txPool;
+        return this.txPool;
     }
 
     /**
@@ -90,14 +92,13 @@ public class Blockchain {
         // IMPLEMENTOVAŤ
 
         // zober predosli blok ak nieje null
-        byte[] previousBlockHash = block.getPrevBlockHash();
-        if (previousBlockHash == null){
+        if (block.getPrevBlockHash() == null){
             System.out.println("False: previousBlock == null");
             return false;
         }
 
-        // zober parenta ak nieje null
-        BlockNode parentBlockNode = blockChain.get(new ByteArrayWrapper(previousBlockHash));
+        // zober node tohto predosleho bloku ak nieje null
+        BlockNode parentBlockNode = this.blockChain.get(new ByteArrayWrapper(block.getPrevBlockHash()));
         if (parentBlockNode == null) {
             System.out.println("False: parentBlockNode == null");
             return false;
@@ -108,9 +109,8 @@ public class Blockchain {
         Transaction[] txs = block.getTransactions().toArray(new Transaction[0]);
 
         // skontroluj txs predchadzajuceho bloku
-        Transaction[] validTxs = handlerTxs.handler(txs);
-        if (validTxs.length != txs.length){
-            System.out.println("False: validTxs.length != txs.length");
+        if (handlerTxs.handler(txs).length != txs.length){
+            System.out.println("False: handlerTxs.handler(txs).length != txs.length");
             return false;
         }
 
@@ -118,25 +118,24 @@ public class Blockchain {
         // coinbase tx teda vymajnovany BTC treba do bloku pridat ako prvu transakciu
         addCoinbaseTx(block, utxoPool);
 
+        // skontroluj vysku
         if (parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE){
             System.out.println("False: parentBlockNode.height + 1 <= highestNode.height - CUT_OFF_AGE");
             return false;
         }
 
-
+        // ak je teda vsetko v pohode tak pridaj block do blockchainu
         BlockNode node = new BlockNode(block, parentBlockNode, utxoPool);
-
-        blockChain.put(new ByteArrayWrapper(block.getHash()), node);
-
-        if (parentBlockNode.height + 1 > highestNode.height){
-            highestNode = node;
+        this.blockChain.put(new ByteArrayWrapper(block.getHash()), node);
+        // nastav novy najvyssi node
+        if (parentBlockNode.height + 1 > this.highestNode.height){
+            this.highestNode = node;
         }
 
-
-        ArrayList<Transaction> allTxs = block.getTransactions();
-        for (Transaction tx : allTxs) {
-            txPool.removeTransaction(tx.getHash());
-        }
+        // tx kt. su v bloku locknute odober z txPoolu lebo uz su vykonane
+        block.getTransactions().forEach( (tx) -> {
+            this.txPool.removeTransaction(tx.getHash());
+        });
 
         return true;
     }
@@ -144,7 +143,7 @@ public class Blockchain {
     /** Pridaj transakciu do transakčného poolu */
     public void transactionAdd(Transaction tx) {
         // IMPLEMENTOVAŤ
-        txPool.addTransaction(tx);
+        this.txPool.addTransaction(tx);
     }
 
     // funkcia na pridanie coinbase tx

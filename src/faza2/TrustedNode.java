@@ -67,13 +67,14 @@ public class TrustedNode implements Node {
         Stream<Object> sendersMap = sendersSteam.map(candidate -> candidate.sender);
         Set<Object> senders = sendersMap.collect(toSet());
 
+        // followees sledovanych a senderov
         for (int i = 0; i < followees.length; i++) {
 
             // ak node vysiela ale nieje v senders
             if (followees[i] && senders.contains(i) !=  true)
                 notTrustedNodes[i] = true;
         }
-
+        // pozri setOfCandidates a ci mozu byt tx pridane do cakajucich
         setOfCandidates.forEach((candidate) -> {
             // ak sender nieje v nedôverihodnych nodes tak jeho tx bude uznana
             // teda pridasa do cakajucich tx
