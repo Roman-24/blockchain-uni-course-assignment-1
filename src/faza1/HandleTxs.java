@@ -79,7 +79,7 @@ public class HandleTxs {
 
             // (3) ak by v tx UTXO tato transakcia uz bola tak sa jedna o doublespend a teda vraciame fasle
             if(seenUTXO_set.contains(unspentTransaction) == false) {
-                // pridaj transakciu do mojho poolu lebo zatial je validna a este v poole nieje
+                // pridaj transakciu do evidencie akoby pouzitych txs
                 seenUTXO_set.add(unspentTransaction);
             } else {
                 // false lebo doublespend
@@ -91,7 +91,7 @@ public class HandleTxs {
         for(Transaction.Output output : tx.getOutputs()) {
 
             // (4) kontrola ci nieje zaporny output
-            if(output.value < 0.0) {
+            if(output.value < 0) {
                 return false;
             }
             outputSum += output.value;
